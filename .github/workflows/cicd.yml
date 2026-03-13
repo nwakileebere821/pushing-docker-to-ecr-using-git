@@ -24,10 +24,9 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Build Docker image
-        run: docker build -t nginx-image .
-
+        run: docker build -t digital .
       - name: Tag Docker image
-        run: docker tag nginx-image:latest <aws-account-id>.dkr.ecr.<region>.amazonaws.com/nginx-repository:latest
+        run: docker tag digital:latest public.ecr.aws/e5d5f6i1/digital:latest
 
       - name: Push Docker image
-        run: docker push <aws-account-id>.dkr.ecr.<region>.amazonaws.com/nginx-repository:latest
+        run: docker push public.ecr.aws/e5d5f6i1/digital:latest
