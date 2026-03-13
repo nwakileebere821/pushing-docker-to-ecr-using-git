@@ -1,13 +1,14 @@
-# get a base image for docker hub
- FROM nginx:latest
- RUN rm -rf/usr/share/nginx/html/*
+# get a base image from docker hub
+FROM nginx:latest
 
+RUN rm -rf /usr/share/nginx/html/*
 
- # define working directory
-WORKDIR /usr/share/share/nginx/html
+# define working directory
+WORKDIR /usr/share/nginx/html
 
-COPY. /usr/share/nginx/html
+COPY . /usr/share/nginx/html
 
-#Expose port
+# expose port
 EXPOSE 80
-CMO{"nginx","-g", "daemon off;"}  
+
+CMD ["nginx", "-g", "daemon off;"]
