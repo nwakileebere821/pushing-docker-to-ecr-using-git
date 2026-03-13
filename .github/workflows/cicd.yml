@@ -1,18 +1,20 @@
-name: Push Docker Image to ECR
+name: Push Docker Image to ECR Public
 
 on:
   push:
     branches:
-      - main
+      - main  # Runs when code is pushed to main branch
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the code
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # Step 2: Configure AWS credentials
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -20,13 +22,20 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Login to Amazon ECR
+      # Step 3: Login to Amazon ECR Public
+      - name: Login to Amazon ECR Public
         uses: aws-actions/amazon-ecr-login@v1
+        with:
+          registry-type: public
 
+      # Step 4: Build Docker image
       - name: Build Docker image
         run: docker build -t digital .
+
+      # Step 5: Tag Docker image for public ECR
       - name: Tag Docker image
         run: docker tag digital:latest public.ecr.aws/e5d5f6i1/digital:latest
 
+      # Step 6: Push Docker image to public ECR
       - name: Push Docker image
         run: docker push public.ecr.aws/e5d5f6i1/digital:latest
