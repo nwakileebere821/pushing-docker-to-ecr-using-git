@@ -47,3 +47,14 @@ jobs:
           echo "${{ secrets.SSH_KEY }}" > mykey.pem
           chmod 600 mykey.pem
           cat mykey.pem
+
+          ssh -o strictHostKey checing=no -i mykey.pem ubuntu@44.203.47.33 "docker ps -a"
+
+           - name: Deploy Docker to server
+    run: |
+        ssh -o StrictHostKeyChecking=no -i mykey.pem ubuntu@YOUR_SERVER_IP << 'EOF'
+          docker pull public.ecr.aws/e5d5f6i1/digital:dockerproject
+          docker stop digital || true
+          docker rm digital || true
+          docker run -d -p 80:80 --name digital public.ecr.aws/e5d5f6i1/digital:dockerproject
+        EOF
