@@ -19,12 +19,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
+      - name: Login to Amazon ECR Public
+        run: |
+          aws ecr-public get-login-password --region ${{ secrets.AWS_REGION }} | \
+          docker login --username AWS --password-stdin public.ecr.aws
 
       - name: Build, Tag, and Push Docker Image
         run: |
-          IMAGE_URI=${{ secrets.REGISTRY_NAME }}/mediplus:${{ github.run_number }}
+          IMAGE_URI=public.ecr.aws/e5d5f6i1/digital:${{ github.run_number }}
           docker build -t $IMAGE_URI .
           docker push $IMAGE_URI
 
@@ -38,10 +40,16 @@ jobs:
           GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
           GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
         run: |
-          git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/YOUR_USERNAME/kubernetes-manifest.git
+          git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/nwakileebere821/kubernetes-manifest.git
           cd kubernetes-manifest/mediplus-yaml
 
-          sed -i "s+image:.*+image: ${{ secrets.REGISTRY_NAME }}/mediplus:${{ github.run_number }}+g" deployment.yaml
+          sed -i "s+image:.*+image: public.ecr.aws/e5d5f6i1/digital:${{ github.run_number }}+g" deployment.yaml
+
+          git config user.email "${GIT_USERNAME}@users.noreply.github.com"
+          git config user.name "${GIT_USERNAME}"
+          git add .
+          git commit -m "Update image"
+          git push
 
   deploy_to_eks:
     runs-on: ubuntu-latest
@@ -55,32 +63,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+
       - name: Update kubeconfig
         run: |
           aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
 
       - name: Apply Kubernetes Manifest
         run: |
-          kubectl apply -f https://raw.githubusercontent.com/YOUR_USERNAME/kubernetes-manifest/main/mediplus-yaml/deployment.yaml
-
-  sync_argocd:
-    runs-on: ubuntu-latest
-    needs: deploy_to_eks
-
-    steps:
-      - name: Install ArgoCD CLI
-        run: |
-          curl -sSL -o argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
-          chmod +x argocd
-          sudo mv argocd /usr/local/bin/
-
-      - name: Login to ArgoCD
-        run: |
-          argocd login ${{ secrets.ARGOCD_SERVER }} \
-            --username ${{ secrets.ARGOCD_USERNAME }} \
-            --password ${{ secrets.ARGOCD_PASSWORD }} \
-            --insecure
-
-      - name: Sync ArgoCD App
-        run: |
-          argocd app sync mediplus-app
+          kubectl apply -f https://raw.githubusercontent.com/nwakileebere821/kubernetes-manifest/main/mediplus-yaml/deployment.yaml
