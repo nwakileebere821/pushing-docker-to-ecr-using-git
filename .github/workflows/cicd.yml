@@ -39,11 +39,11 @@ jobs:
           GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
         run: |
           git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/nwakileebere821/kubernetes-manifest.git
-          cd kubernetes-manifest/deployment.yaml
+          cd kubernetes-manifest/mediplus-config
           sed -i "s+image:.*+image: 318689657850.dkr.ecr.us-east-1.amazonaws.com/kubernetes-registry:${{ github.run_number }}+g" deployment.yaml
           git config user.email "nwakileebere821@gmail.com"
           git config user.name "github-actions"
-          git add .
+          git add deployment.yaml
           git commit -m "Update image tag"
           git push
 
@@ -70,5 +70,5 @@ jobs:
 
       - name: Apply Kubernetes Manifest
         run: |
-          cd kubernetes-manifest/mediplus-yaml
+          cd kubernetes-manifest/mediplus-config
           kubectl apply -f deployment.yaml
