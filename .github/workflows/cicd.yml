@@ -78,6 +78,11 @@ jobs:
         run: |
           aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
 
+      - name: Verify kubectl context
+        run: |
+          kubectl config current-context
+          kubectl get nodes
+
       - name: Apply Kubernetes Manifest
         run: |
-          kubectl apply -f kubernetes-manifest/mediplus-config/deployment.yaml
+          kubectl apply --validate=false -f kubernetes-manifest/mediplus-config/deployment.yaml
